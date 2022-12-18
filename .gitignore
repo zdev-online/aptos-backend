@@ -1,0 +1,5 @@
+node_modules
+configs/.development.env
+configs/.production.env
+dist
+domains/**/*

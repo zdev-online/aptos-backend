@@ -1,0 +1,16 @@
+export const ErrorCodes = {
+  Unknown: 0,
+  GoogleCaptchaError: 5,
+  InvalidData: 100,
+  InvalidPassword: 101,
+  InvalidAccessToken: 102,
+  InvalidRefreshToken: 103,
+  InvalidConfirmationTolen: 104,
+  NotEnoughMoney: 105,
+  UserNotFound: 200,
+  UserAlreadyExists: 201,
+  AlreadyHaveSubscribtion: 202,
+  DomainAlreadyExists: 202,
+  ForbiddenAction: 500,
+  MaxDomainsCount: 501,
+};

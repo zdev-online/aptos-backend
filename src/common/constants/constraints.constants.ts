@@ -1,0 +1,6 @@
+export const MIN_PASSWORD_LENGTH = 8;
+export const MAX_PASSWORD_LENGTH = 24;
+export const MONTH_SUBSCRIBE_TTL = 2_592_000_000;
+export const MONTH_SUBSCRIBE_PRICE_IN_DOLLARS = 100;
+export const MAX_MONTH_SUB_DOMAINS = 20;
+export const MAX_WORKER_SUB_DOMAINS = 3;
