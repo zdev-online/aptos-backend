@@ -94,10 +94,10 @@ export class ProfileController {
   })
   @HttpCode(HttpStatus.OK)
   @Version(Versions.Alpha)
-  @Get('/')
+  @Get('/get/:profile_id')
   public getProfile(
     @JwtPayload('user_id') user_id: number,
-    @Query('profile_id') profile_id: string,
+    @Param('profile_id') profile_id: string,
   ) {
     return this.profileService.getProfile(user_id, +profile_id);
   }
