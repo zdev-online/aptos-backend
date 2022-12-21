@@ -1,10 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { BadRequestException, ErrorCodes } from 'src/common';
+import {
+  BadRequestException,
+  ErrorCodes,
+  PageDto,
+  PageMetaDto,
+} from 'src/common';
 import { MailerService } from 'src/mailer/mailer.service';
 import { TokenService } from 'src/token/token.service';
 import { PrivateUserResponseDto, UserResponseDto } from 'src/user/dto';
+import { UsersEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
-import { ChangeEmailDto, ChangePasswordDto } from './dto';
+import { ChangeEmailDto, ChangePasswordDto, GetUsersListDto } from './dto';
 
 @Injectable()
 export class ProfileService {
@@ -88,5 +94,26 @@ export class ProfileService {
     } else {
       return new PrivateUserResponseDto(user!);
     }
+  }
+
+  public async getUsersList(
+    user: UsersEntity,
+    dto: GetUsersListDto,
+  ): Promise<PageDto<Omit<UsersEntity, 'domains'>>> {
+    const total = await this.userService.getCount();
+
+    const skip = ((dto.page || 1) - 1) * (dto.take || 10);
+    const page_meta = new PageMetaDto({
+      page: dto.page || 1,
+      take: dto.take || 10,
+      total,
+    });
+
+    const users_list = await this.userService.getPaginated(
+      skip || 0,
+      dto.take || 10,
+    );
+
+    return new PageDto(users_list, page_meta);
   }
 }

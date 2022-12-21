@@ -40,6 +40,9 @@ export class DomainsService {
 
     const domain = await this.prismaService.domains.findUnique({
       where: { host },
+      select: {
+        id: true,
+      },
     });
 
     if (!domain) {

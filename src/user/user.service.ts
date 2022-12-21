@@ -107,4 +107,20 @@ export class UserService {
     const salt = await bcrypt.genSalt(10);
     return bcrypt.hash(password, salt);
   }
+
+  /** Получить часть */
+  public async getPaginated(skip: number, take: number) {
+    return this.prismaService.users.findMany({
+      skip,
+      take,
+      include: {
+        subscription: true,
+      },
+    });
+  }
+
+  /** Получить количество пользователей */
+  public getCount() {
+    return this.prismaService.users.count();
+  }
 }

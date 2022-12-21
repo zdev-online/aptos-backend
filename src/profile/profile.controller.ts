@@ -4,8 +4,10 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Logger,
   Param,
   Post,
+  Query,
   UseGuards,
   Version,
 } from '@nestjs/common';
@@ -14,14 +16,24 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  OmitType,
+  PickType,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { JwtPayload, Keys, Versions } from 'src/common';
+import {
+  ApiPaginatedResponse,
+  JwtPayload,
+  Keys,
+  PageDto,
+  User,
+  Versions,
+} from 'src/common';
 import { UsersEntity } from 'src/user/user.entity';
 import {
   ChangeEmailDto,
   ChangePasswordDto,
   ConfirmChangeEmailDto,
+  GetUsersListDto,
 } from './dto';
 import { ProfileService } from './profile.service';
 
@@ -82,12 +94,27 @@ export class ProfileController {
   })
   @HttpCode(HttpStatus.OK)
   @Version(Versions.Alpha)
-  @Get('/:profile_id')
+  @Get('/')
   public getProfile(
     @JwtPayload('user_id') user_id: number,
-    @Param('profile_id') profile_id: string,
+    @Query('profile_id') profile_id: string,
   ) {
     return this.profileService.getProfile(user_id, +profile_id);
+  }
+
+  @ApiHeader({ name: 'Version', enum: Versions })
+  @ApiOperation({
+    description: 'Получить список пользователей',
+  })
+  @HttpCode(HttpStatus.OK)
+  @Version(Versions.Alpha)
+  @ApiPaginatedResponse(class extends OmitType(UsersEntity, ['domains']) {})
+  @Get('/list')
+  public getUsersList(
+    @User() user: UsersEntity,
+    @Query() dto: GetUsersListDto,
+  ): Promise<PageDto<Omit<UsersEntity, 'domains'>>> {
+    return this.profileService.getUsersList(user, dto);
   }
 
   @ApiHeader({ name: 'Version', enum: Versions })

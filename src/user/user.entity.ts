@@ -4,6 +4,7 @@ import {
   ApiProperty,
   ApiPropertyOptional,
 } from '@nestjs/swagger';
+import { DomainEntity } from 'src/domains/domain.entity';
 
 export class UsersEntity implements Users {
   @ApiProperty({ title: 'ID Пользователя' })
@@ -40,4 +41,10 @@ export class UsersEntity implements Users {
 
   @ApiHideProperty()
   public password: string;
+
+  @ApiProperty({
+    description: 'Домены пользователя',
+    type: () => [DomainEntity],
+  })
+  public domains: DomainEntity[];
 }
