@@ -5,6 +5,7 @@ import {
   ApiPropertyOptional,
 } from '@nestjs/swagger';
 import { DomainEntity } from 'src/domains/domain.entity';
+import { SubscriptionEntity } from 'src/subscriptions/subcription.entity';
 
 export class UsersEntity implements Users {
   @ApiProperty({ title: 'ID Пользователя' })
@@ -47,4 +48,10 @@ export class UsersEntity implements Users {
     type: () => [DomainEntity],
   })
   public domains: DomainEntity[];
+
+  @ApiProperty({
+    description: 'Подписка пользователя',
+    type: () => SubscriptionEntity,
+  })
+  public subscription?: SubscriptionEntity | null;
 }
