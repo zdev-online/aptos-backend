@@ -57,7 +57,6 @@ export class UsersEntity implements Users {
 
   @ApiProperty({
     description: 'Забанен пользователь или нет',
-    type: () => SubscriptionEntity,
   })
   public banned: boolean;
 }
