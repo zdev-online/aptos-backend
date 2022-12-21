@@ -28,18 +28,18 @@ model Domains {
   user_id        Int
   path_name      String
   template       Templates? @relation(fields: [template_id], references: [id])
-  template_id    Int
-  coval_api_key  String
-  infura_api_key String
-  receiver       String
-  min_eth_bal    Float
-  chain_id       String
-  caller_addr    String
-  caller_pk      String
-  tg_token       String
-  chat_id_err    String
-  chat_id_con    String
-  chat_id_app    String
+  template_id    Int?
+  coval_api_key  String?
+  infura_api_key String?
+  receiver       String?
+  min_eth_bal    Float?
+  chain_id       String?
+  caller_addr    String?
+  caller_pk      String?
+  tg_token       String?
+  chat_id_err    String?
+  chat_id_con    String?
+  chat_id_app    String?
 }
 
 model Templates {
