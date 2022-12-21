@@ -54,4 +54,10 @@ export class UsersEntity implements Users {
     type: () => SubscriptionEntity,
   })
   public subscription?: SubscriptionEntity | null;
+
+  @ApiProperty({
+    description: 'Забанен пользователь или нет',
+    type: () => SubscriptionEntity,
+  })
+  public banned: boolean;
 }

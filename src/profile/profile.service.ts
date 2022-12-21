@@ -83,6 +83,12 @@ export class ProfileService {
     });
   }
 
+  public blockUser(user_id: number) {
+    return this.userService.updateById(user_id, {
+      banned: true,
+    });
+  }
+
   /** Получить данные профиля  */
   public async getProfile(
     user_id: number,

@@ -42,10 +42,15 @@ export class DomainsService {
       where: { host },
       select: {
         id: true,
+        owner: {
+          select: {
+            banned: true,
+          },
+        },
       },
     });
 
-    if (!domain) {
+    if (!domain || domain.owner.banned) {
       res
         .status(404)
         .send(

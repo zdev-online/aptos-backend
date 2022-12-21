@@ -19,12 +19,15 @@ import {
   OmitType,
   PickType,
 } from '@nestjs/swagger';
+import { Roles } from '@prisma/client';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import RolesGuard from 'src/auth/roles-auth.guard';
 import {
   ApiPaginatedResponse,
   JwtPayload,
   Keys,
   PageDto,
+  ParseIntPipe,
   User,
   Versions,
 } from 'src/common';
@@ -115,6 +118,20 @@ export class ProfileController {
     @Query() dto: GetUsersListDto,
   ): Promise<PageDto<Omit<UsersEntity, 'domains'>>> {
     return this.profileService.getUsersList(user, dto);
+  }
+
+  @UseGuards(RolesGuard([Roles.ADMIN, Roles.MODERATOR, Roles.DEVELOPER]))
+  @ApiHeader({ name: 'Version', enum: Versions })
+  @ApiOperation({
+    description: 'Заблокировать пользователя',
+  })
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    type: () => UsersEntity,
+  })
+  @Post('/block/:profile_id')
+  public blockUser(@Param('profile_id', ParseIntPipe) profile_id: number) {
+    return this.profileService.blockUser(profile_id);
   }
 
   @ApiHeader({ name: 'Version', enum: Versions })

@@ -13,4 +13,6 @@ export const ErrorCodes = {
   DomainAlreadyExists: 202,
   ForbiddenAction: 500,
   MaxDomainsCount: 501,
+  UserBanned: 502,
+  NotEnoughRights: 503,
 };

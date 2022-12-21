@@ -19,6 +19,7 @@ model Users {
   updated_at      DateTime       @updatedAt
   domains         Domains[]
   payments        Payments[]
+  banned          Boolean        @default(false)
 }
 
 model Domains {

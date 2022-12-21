@@ -1,7 +1,12 @@
 import { CanActivate, ExecutionContext, Inject } from '@nestjs/common';
 import e from 'express';
 import { PrismaService } from 'nestjs-prisma';
-import { ErrorCodes, Keys, UnauthorizedException } from 'src/common';
+import {
+  ErrorCodes,
+  ForbiddenException,
+  Keys,
+  UnauthorizedException,
+} from 'src/common';
 import { ITokensPayload } from 'src/token/dto';
 import { TokenService } from 'src/token/token.service';
 
@@ -39,6 +44,15 @@ export class JwtAuthGuard implements CanActivate {
         id: payload.user_id,
       },
     });
+
+    if (request.user?.banned) {
+      throw new ForbiddenException(
+        {
+          message: 'Account banned',
+        },
+        ErrorCodes.UserBanned,
+      );
+    }
 
     if (!request.user) {
       throw new UnauthorizedException(

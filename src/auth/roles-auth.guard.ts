@@ -1,6 +1,7 @@
 import { CanActivate, ExecutionContext, mixin, Type } from '@nestjs/common';
 import { Roles } from '@prisma/client';
 import { PrismaService } from 'nestjs-prisma';
+import { ErrorCodes, ForbiddenException } from 'src/common';
 import { TokenService } from 'src/token/token.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
@@ -21,9 +22,18 @@ const RolesGuard = (roles?: Roles[]): Type<CanActivate> => {
       }
 
       const request = context.switchToHttp().getRequest();
-      const { user } = request.payload;
+      const { user } = request;
 
-      return roles.some((role) => role == user?.role);
+      const has_role = roles.some((role) => role == user?.role);
+
+      if (!has_role) {
+        throw new ForbiddenException(
+          { message: 'Not enough rights' },
+          ErrorCodes.NotEnoughRights,
+        );
+      }
+
+      return true;
     }
   }
 

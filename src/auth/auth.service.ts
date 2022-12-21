@@ -4,6 +4,7 @@ import {
   BadRequestException,
   ConflictException,
   UnauthorizedException,
+  ForbiddenException,
 } from 'src/common';
 import { MailerService } from 'src/mailer/mailer.service';
 import { TokenService } from 'src/token/token.service';
@@ -115,6 +116,13 @@ export class AuthService {
     }
 
     const user = await this.userService.findById(payload.user_id);
+
+    if (user?.banned) {
+      throw new ForbiddenException(
+        { message: 'Account banned' },
+        ErrorCodes.UserBanned,
+      );
+    }
 
     if (!user) {
       throw new BadRequestException(
