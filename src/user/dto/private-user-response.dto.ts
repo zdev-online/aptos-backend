@@ -11,6 +11,12 @@ export class PrivateUserResponseDto {
   @Exclude()
   public email_confirmed: string;
 
+  @Exclude()
+  public domains: any;
+
+  @Exclude()
+  public subscription: any;
+
   constructor(user: Users) {
     Object.assign(this, user);
   }

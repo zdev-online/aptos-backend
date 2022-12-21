@@ -37,21 +37,22 @@ export class UsersEntity implements Users {
   public created_at: Date;
 
   @ApiProperty({ title: 'Последнее обновление в базе' })
-  @ApiProperty({ title: '' })
   public updated_at: Date;
 
   @ApiHideProperty()
   public password: string;
 
-  @ApiProperty({
-    description: 'Домены пользователя',
+  @ApiPropertyOptional({
+    title: 'Домены пользователя',
     type: () => [DomainEntity],
+    description: 'Не возвращается только в 1 случае: Получение чужого аккаунта',
   })
   public domains: DomainEntity[];
 
-  @ApiProperty({
-    description: 'Подписка пользователя',
+  @ApiPropertyOptional({
+    title: 'Подписка пользователя',
     type: () => SubscriptionEntity,
+    description: 'Не возвращается только в 1 случае: Получение чужого аккаунта',
   })
   public subscription?: SubscriptionEntity | null;
 
