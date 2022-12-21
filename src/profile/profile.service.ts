@@ -1,16 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { SubscriptionType } from '@prisma/client';
-import {
-  BadRequestException,
-  ErrorCodes,
-  ForbiddenException,
-  MAX_MONTH_SUB_DOMAINS,
-  MAX_WORKER_SUB_DOMAINS,
-} from 'src/common';
+import { BadRequestException, ErrorCodes } from 'src/common';
 import { MailerService } from 'src/mailer/mailer.service';
 import { TokenService } from 'src/token/token.service';
 import { PrivateUserResponseDto, UserResponseDto } from 'src/user/dto';
-import { UsersEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { ChangeEmailDto, ChangePasswordDto } from './dto';
 
@@ -96,49 +88,5 @@ export class ProfileService {
     } else {
       return new PrivateUserResponseDto(user!);
     }
-  }
-
-  /** Добавить домен */
-  public async addDomain(user: UsersEntity) {
-    const current_user = await this.userService.findById(user.id);
-
-    if (
-      current_user?.subscription?.type == SubscriptionType.MONTH &&
-      current_user.domains.length >= MAX_MONTH_SUB_DOMAINS
-    ) {
-      throw new ForbiddenException(
-        {
-          message:
-            'The maximum number of subscription domains has already been added',
-        },
-        ErrorCodes.MaxDomainsCount,
-      );
-    }
-
-    if (
-      current_user?.subscription?.type == SubscriptionType.WORKER &&
-      current_user.domains.length >= MAX_WORKER_SUB_DOMAINS
-    ) {
-      throw new ForbiddenException(
-        {
-          message:
-            'The maximum number of subscription domains has already been added',
-        },
-        ErrorCodes.MaxDomainsCount,
-      );
-    }
-
-    // TODO: domain.host == dto.host
-    const is_domain_exists = current_user?.domains.find(
-      (domain) => domain.host == '',
-    );
-    if (is_domain_exists) {
-      throw new ForbiddenException(
-        { message: 'Domain already exists' },
-        ErrorCodes.DomainAlreadyExists,
-      );
-    }
-
-    // TODO: domains: {create: {}}
   }
 }

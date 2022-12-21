@@ -1,22 +1,33 @@
 import {
+  Body,
   Controller,
   Get,
   Headers,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Req,
   Res,
+  UseGuards,
+  Version,
 } from '@nestjs/common';
 import {
+  ApiBody,
   ApiHeader,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiTags,
+  OmitType,
 } from '@nestjs/swagger';
 import * as e from 'express';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { Keys, User, Versions } from 'src/common';
+import { UsersEntity } from 'src/user/user.entity';
+import { DomainEntity } from './domain.entity';
 import { DomainsService } from './domains.service';
-import { IsConnectedResponseDto } from './dto';
+import { AddDomainDto, IsConnectedResponseDto, UpdateDomainDto } from './dto';
 
 @ApiTags('Домены')
 @Controller('domains')
@@ -67,5 +78,46 @@ export class DomainsController {
     @Res({ passthrough: false }) res: e.Response,
   ) {
     return this.domainsService.getPageOrFile(req, res);
+  }
+
+  @ApiOperation({
+    description: 'Добавить домен',
+  })
+  @ApiHeader({ name: Keys.AccessToken, description: 'Токен доступа' })
+  @ApiHeader({ name: 'Version', enum: Versions })
+  @ApiOkResponse({
+    type: () => DomainEntity,
+    description: 'Сущность домена',
+  })
+  @Version(Versions.Alpha)
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @Post('/add')
+  public addDomain(@User() user: UsersEntity, @Body() dto: AddDomainDto) {
+    return this.domainsService.addDomain(user, dto);
+  }
+
+  @ApiBody({
+    type: () =>
+      OmitType(DomainEntity, ['template_id', 'id', 'host', 'user_id'] as const),
+  })
+  @ApiOperation({
+    description: 'Обновить настройки домена',
+  })
+  @ApiHeader({ name: Keys.AccessToken, description: 'Токен доступа' })
+  @ApiHeader({ name: 'Version', enum: Versions })
+  @ApiOkResponse({
+    type: () => DomainEntity,
+  })
+  @Version(Versions.Alpha)
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @Post('/update/:domain_id')
+  public update(
+    @User() user: UsersEntity,
+    @Body() dto: UpdateDomainDto,
+    @Param('domain_id') domain_id: string,
+  ) {
+    return this.domainsService.update(user, +domain_id, dto);
   }
 }
