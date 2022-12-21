@@ -8,7 +8,6 @@ import {
   BadRequestException,
   ForbiddenException,
 } from 'src/common';
-import { UserResponseDto } from 'src/user/dto';
 import { UsersEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 

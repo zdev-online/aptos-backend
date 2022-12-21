@@ -1,16 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'nestjs-prisma';
-import {
-  BadRequestException,
-  ErrorCodes,
-  ForbiddenException,
-  MONTH_SUBSCRIBE_PRICE_IN_DOLLARS,
-  MONTH_SUBSCRIBE_TTL,
-} from 'src/common';
+import { BadRequestException, ErrorCodes } from 'src/common';
 import { CrystalPayService } from 'src/crystal-pay/crystal-pay.service';
 import { ExtraDataDto, CrystalPaymentEventDto } from 'src/crystal-pay/dto';
-import { UserResponseDto } from 'src/user/dto';
-import { UsersEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 
 @Injectable()

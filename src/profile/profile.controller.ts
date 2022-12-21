@@ -4,7 +4,6 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   Post,
   Query,
@@ -17,7 +16,6 @@ import {
   ApiOperation,
   ApiTags,
   OmitType,
-  PickType,
 } from '@nestjs/swagger';
 import { Roles } from '@prisma/client';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
