@@ -109,6 +109,7 @@ export class ProfileController {
   @ApiOperation({
     description: 'Получить список пользователей',
   })
+  @UseGuards(RolesGuard([Roles.ADMIN, Roles.MODERATOR, Roles.DEVELOPER]))
   @HttpCode(HttpStatus.OK)
   @Version(Versions.Alpha)
   @ApiPaginatedResponse(class extends OmitType(UsersEntity, ['domains']) {})
