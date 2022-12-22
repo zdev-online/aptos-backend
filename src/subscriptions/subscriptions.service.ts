@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule/dist';
+import { SubscriptionType } from '@prisma/client';
 import { PrismaService } from 'nestjs-prisma';
 import {
   MONTH_SUBSCRIBE_PRICE_IN_DOLLARS,
@@ -10,6 +11,7 @@ import {
 } from 'src/common';
 import { UsersEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
+import { ChangeUserSubscritptionDto } from './dto';
 
 @Injectable()
 export class SubscriptionsService {
@@ -65,6 +67,54 @@ export class SubscriptionsService {
     return;
   }
 
+  /** Сменить подприску пользователя */
+  public async changeUserSubscritption(dto: ChangeUserSubscritptionDto) {
+    const current_subscription =
+      await this.prismaService.subscriptions.findUnique({
+        where: {
+          user_id: dto.user_id,
+        },
+      });
+
+    if (!current_subscription) {
+      throw new BadRequestException(
+        { message: 'User subscription not found' },
+        ErrorCodes.SubscribtionNotFound,
+      );
+    }
+
+    if (current_subscription.type == dto.type) {
+      throw new BadRequestException(
+        {
+          message: 'User already have this subscription',
+        },
+        ErrorCodes.AlreadyHaveSubscribtion,
+      );
+    }
+
+    if (dto.type == SubscriptionType.MONTH) {
+      return this.prismaService.subscriptions.update({
+        where: {
+          id: current_subscription.id,
+        },
+        data: {
+          type: dto.type,
+          expires_in: new Date(Date.now() + MONTH_SUBSCRIBE_TTL),
+        },
+      });
+    }
+
+    return this.prismaService.subscriptions.update({
+      where: {
+        id: current_subscription.id,
+      },
+      data: {
+        type: dto.type,
+        expires_in: null,
+      },
+    });
+  }
+
   /** Найти и удалить просроченные подписки */
   @Cron('10 * * * *', {
     timeZone: 'Europe/Moscow',
@@ -79,7 +129,7 @@ export class SubscriptionsService {
           },
         },
         data: {
-          type: 'WORKER',
+          type: SubscriptionType.WORKER,
         },
       });
 
