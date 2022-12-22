@@ -83,6 +83,7 @@ export class ProfileService {
     });
   }
 
+  /** Заблокировать пользователя */
   public blockUser(user_id: number) {
     return this.userService.updateById(user_id, {
       banned: true,
@@ -102,6 +103,7 @@ export class ProfileService {
     }
   }
 
+  /** Получить списко пользователей */
   public async getUsersList(
     user: UsersEntity,
     dto: GetUsersListDto,
