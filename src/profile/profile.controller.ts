@@ -110,7 +110,9 @@ export class ProfileController {
   @UseGuards(RolesGuard([Roles.ADMIN, Roles.MODERATOR, Roles.DEVELOPER]))
   @HttpCode(HttpStatus.OK)
   @Version(Versions.Alpha)
-  @ApiPaginatedResponse(class extends OmitType(UsersEntity, ['domains']) {})
+  @ApiPaginatedResponse(
+    class PaginatedUsers extends OmitType(UsersEntity, ['domains']) {},
+  )
   @Get('/list')
   public getUsersList(
     @User() user: UsersEntity,
