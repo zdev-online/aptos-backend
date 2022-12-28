@@ -59,7 +59,7 @@ export class AuthService {
     if (!payload) {
       throw new BadRequestException(
         { message: 'Invalid confirmation token' },
-        ErrorCodes.InvalidConfirmationTolen,
+        ErrorCodes.InvalidConfirmationToken,
       );
     }
 

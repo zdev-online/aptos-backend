@@ -31,6 +31,7 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       stopAtFirstError: true,
+      whitelist: true,
       exceptionFactory: ([error]) => {
         const message = Object.values(
           error.constraints || { invalid_data: 'Unknown invalid data' },

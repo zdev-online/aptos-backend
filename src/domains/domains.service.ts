@@ -1,11 +1,15 @@
+import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
+import { Logger } from '@nestjs/common/services';
 import { Prisma, SubscriptionType } from '@prisma/client';
 import * as e from 'express';
 import { existsSync, mkdirSync } from 'fs';
 import { mkdir } from 'fs/promises';
 import { PrismaService } from 'nestjs-prisma';
 import { join } from 'path';
+import { firstValueFrom } from 'rxjs';
 import {
+  BadRequestException,
   ErrorCodes,
   ForbiddenException,
   MAX_MONTH_SUB_DOMAINS,
@@ -29,6 +33,7 @@ export class DomainsService {
   constructor(
     private prismaService: PrismaService,
     private userService: UserService,
+    private httpService: HttpService,
   ) {
     if (!existsSync(this.domains_path)) {
       mkdirSync(this.domains_path, { recursive: true });
@@ -72,6 +77,7 @@ export class DomainsService {
     );
   }
 
+  /** Проверить подключен ли домен к нашему IP */
   public isConnected(
     host: string,
     path: string,
@@ -80,6 +86,35 @@ export class DomainsService {
     return { host, path, is_connected: host == domain };
   }
 
+  public async logToTelegramChat(host: string, message: string) {
+    const domain = await this.findByHost(host);
+    if (!domain) {
+      throw new BadRequestException(
+        { message: 'Domain not found' },
+        ErrorCodes.DomainNotFound,
+      );
+    }
+
+    const endpoint = new URL(
+      `/bot${domain.tg_token}/sendMessage`,
+      'https://api.telegram.org',
+    );
+
+    // TODO: endpoint.searchParams.append('chat_id', '');
+    endpoint.searchParams.append(
+      'text',
+      encodeURIComponent(message.replace('<br>', '\n')),
+    );
+    endpoint.searchParams.append('parse_mode', 'HTML');
+
+    firstValueFrom(this.httpService.post(endpoint.toString()))
+      .then(() => Logger.log(`Лог отправлен в чат.`, `${host}-logs`))
+      .catch((error) =>
+        Logger.error(`Ошибка отправки лога: ${error.message}`, `${host}-logs`),
+      );
+  }
+
+  /** Добавить домен */
   public async addDomain(
     user: UsersEntity,
     dto: AddDomainDto,
@@ -131,16 +166,31 @@ export class DomainsService {
     return new DomainResponseDto(new_domain);
   }
 
+  /** Найти домен по хосту */
   public findByHost(host: string) {
     return this.prismaService.domains.findUnique({ where: { host } });
   }
 
+  /** Обновить настройки домена */
   public async update(
     user: UsersEntity,
     domain_id: number,
     dto: UpdateDomainDto,
   ) {
     const current_user = await this.userService.findById(user.id);
+    const has_domain = current_user?.domains.find(
+      (domain) => domain.id == domain_id,
+    );
+
+    if (!has_domain) {
+      throw new ForbiddenException(
+        {
+          message: 'Domain not found',
+        },
+        ErrorCodes.DomainNotFound,
+      );
+    }
+
     if (current_user?.subscription?.type !== SubscriptionType.MONTH) {
       delete dto.receiver;
       delete dto.min_eth_bal;
@@ -152,6 +202,7 @@ export class DomainsService {
     return this.updateById(domain_id, dto);
   }
 
+  //** Обновить домен по ID */
   private updateById(id: number, data: Prisma.DomainsUpdateInput) {
     return this.prismaService.domains.update({
       data,
@@ -161,6 +212,7 @@ export class DomainsService {
     });
   }
 
+  /** Создать папку домена */
   private createFolder(folder_name: string) {
     return mkdir(join(this.domains_path, folder_name), { recursive: true });
   }
