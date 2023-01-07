@@ -12,6 +12,7 @@ import { CrystalPayModule } from './crystal-pay/crystal-pay.module';
 import { PaymentsModule } from './payments/payments.module';
 import { DomainsModule } from './domains/domains.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { WalletModule } from './wallet/wallet.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
     PaymentsModule,
     DomainsModule,
     SubscriptionsModule,
+    WalletModule,
   ],
   controllers: [AppController],
   providers: [AppService],

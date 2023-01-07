@@ -4,55 +4,40 @@ export class UpdateDomainDto {
   @IsOptional()
   @IsNotEmpty()
   @IsString()
-  public coval_api_key: string;
+  public tg_token?: string;
 
   @IsOptional()
   @IsNotEmpty()
   @IsString()
-  public infura_api_key: string;
+  public chat_id?: string;
 
   @IsOptional()
   @IsNotEmpty()
   @IsString()
-  public receiver?: string;
-
-  @IsOptional()
-  @IsNotEmpty()
-  @IsNumber({ allowInfinity: false, allowNaN: false })
-  public min_eth_bal?: number;
+  public zapper_token?: string;
 
   @IsOptional()
   @IsNotEmpty()
   @IsString()
-  public chain_id?: string;
+  public private_key?: string;
 
   @IsOptional()
   @IsNotEmpty()
   @IsString()
-  public caller_addr?: string;
+  public contract_SAFA?: string;
 
   @IsOptional()
   @IsNotEmpty()
   @IsString()
-  public caller_pk?: string;
+  public recipient?: string;
 
   @IsOptional()
   @IsNotEmpty()
   @IsString()
-  public tg_token: string;
+  public operator?: string;
 
   @IsOptional()
   @IsNotEmpty()
   @IsString()
-  public chat_id_err: string;
-
-  @IsOptional()
-  @IsNotEmpty()
-  @IsString()
-  public chat_id_con: string;
-
-  @IsOptional()
-  @IsNotEmpty()
-  @IsString()
-  public chat_id_app: string;
+  public owner_address?: string;
 }

