@@ -18,6 +18,7 @@ import {
   BaseException,
   GoogleRecaptchaFilter,
 } from './common';
+import { LoggingInterceptor } from './common/interceptors';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -45,6 +46,7 @@ async function bootstrap() {
 
   const reflector = app.get(Reflector);
   app.useGlobalInterceptors(
+    new LoggingInterceptor(),
     new ClassSerializerInterceptor(reflector, {
       strategy: 'exposeAll',
       exposeUnsetFields: false,

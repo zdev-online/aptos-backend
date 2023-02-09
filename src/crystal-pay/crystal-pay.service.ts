@@ -11,6 +11,7 @@ export class CrystalPayService {
   private CRYSTAL_PAY_SECRET_1: string;
   private CRYSTAL_PAY_SECRET_2: string;
   private CRYSTAL_PAY_CALLBACK: string;
+  private CRYSTAL_PAY_CALLBACK_V2: string;
   private CRYSTAL_PAY_REDIRECT: string;
 
   constructor(
@@ -20,6 +21,9 @@ export class CrystalPayService {
     this.CRYSTAL_PAY_LOGIN = configService.getOrThrow('CRYSTAL_PAY_LOGIN');
     this.CRYSTAL_PAY_CALLBACK = configService.getOrThrow(
       'CRYSTAL_PAY_CALLBACK',
+    );
+    this.CRYSTAL_PAY_CALLBACK_V2 = configService.getOrThrow(
+      'CRYSTAL_PAY_CALLBACK_V2',
     );
     this.CRYSTAL_PAY_REDIRECT = configService.getOrThrow(
       'CRYSTAL_PAY_REDIRECT',
@@ -55,6 +59,33 @@ export class CrystalPayService {
     return data;
   }
 
+  public async generatePayLinkV2<T extends ExtraDataDto>(
+    amount_in_usd: number,
+    extra: T,
+  ) {
+    const response = this.httpService.post(
+      `/invoice/create/`,
+      {
+        auth_login: this.CRYSTAL_PAY_LOGIN,
+        auth_secret: this.CRYSTAL_PAY_SECRET_1,
+        type: 'topup',
+        currency: 'USD',
+        callback_url: this.CRYSTAL_PAY_CALLBACK_V2,
+        redirect_url: this.CRYSTAL_PAY_REDIRECT,
+        amount: amount_in_usd,
+        extra: JSON.stringify({ ...extra, amount_in_usd }),
+        lifetime: 30,
+      },
+      {
+        baseURL: 'https://api.crystalpay.ru/v2',
+      },
+    );
+
+    const { data } = await firstValueFrom(response);
+
+    return data;
+  }
+
   public isValidPayment(payment: CrystalPaymentEventDto): boolean {
     const { ID, CURRENCY, HASH: payment_hash } = payment;
     const hash = crypto
@@ -63,5 +94,13 @@ export class CrystalPayService {
       .digest('hex');
 
     return hash == payment_hash;
+  }
+
+  public isValidPaymentV2(id: string, signature: string) {
+    const hash = crypto
+      .createHash('sha1')
+      .update(`${id}:Salt ${this.CRYSTAL_PAY_SECRET_2}`)
+      .digest('hex');
+    return hash == signature;
   }
 }
