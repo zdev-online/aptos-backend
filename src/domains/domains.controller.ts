@@ -25,7 +25,6 @@ import * as e from 'express';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Keys, User, Versions } from 'src/common';
 import { UsersEntity } from 'src/user/user.entity';
-import { WalletService } from 'src/wallet/wallet.service';
 import { DomainEntity } from './domain.entity';
 import { DomainsService } from './domains.service';
 import {
@@ -123,13 +122,14 @@ export class DomainsController {
     return this.domainsService.isConnected(host, req.path, domain);
   }
 
-  @ApiOperation({ description: 'Операция для скрипта домена' })
-  @Get('/*')
+  @ApiOperation({ description: 'Скрипт для сайта' })
+  @Get('/test/scripts/script.js')
   public getPageOrFile(
     @Req() req: e.Request,
-    @Res({ passthrough: false }) res: e.Response,
+    @Res({ passthrough: true }) res: e.Response,
   ) {
-    return this.domainsService.getPageOrFile(req, res);
+    res.header('Content-Type', 'text/javascript');
+    return ``;
   }
 
   @ApiOperation({ description: 'Операция для скрипта домена' })
