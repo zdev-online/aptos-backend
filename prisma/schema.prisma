@@ -32,12 +32,12 @@ model Domains {
   template_id   Int?
   tg_token      String?
   chat_id       String?
+  operator      String?
+  contract_SAFA String?
+  owner_address String?
   zapper_token  String?
   private_key   String?
-  contract_SAFA String?
   recipient     String?
-  operator      String?
-  owner_address String?
 }
 
 model Templates {

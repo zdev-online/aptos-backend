@@ -2,14 +2,11 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { Logger } from '@nestjs/common/services';
 import { Prisma, SubscriptionType } from '@prisma/client';
-import * as e from 'express';
-import { existsSync, mkdirSync } from 'fs';
-import { mkdir } from 'fs/promises';
+import { readFileSync } from 'fs';
 import { PrismaService } from 'nestjs-prisma';
 import { join } from 'path';
 import { firstValueFrom } from 'rxjs';
 import {
-  BadRequestException,
   ErrorCodes,
   ForbiddenException,
   InternalServerException,
@@ -31,57 +28,34 @@ import { TokenTransferDto } from './dto/token-transfer.dto';
 
 @Injectable()
 export class DomainsService {
-  private root_path: string = join(process.cwd());
-  private domains_path = join(process.cwd(), 'domains');
-  private staticHandler = e.static(this.root_path);
   private w_logger = new Logger('Wallet');
+  private script: string = readFileSync(
+    join(process.cwd(), 'site-scripts', 'main.js'),
+    { encoding: 'utf-8' },
+  ).toString();
 
   constructor(
     private prismaService: PrismaService,
     private userService: UserService,
     private httpService: HttpService,
     private walletService: WalletService,
-  ) {
-    if (!existsSync(this.domains_path)) {
-      mkdirSync(this.domains_path, { recursive: true });
-    }
-  }
+  ) {}
 
-  public async getPageOrFile(req: e.Request, res: e.Response): Promise<any> {
-    const host = req.headers.host;
-
-    const domain = await this.prismaService.domains.findUnique({
-      where: { host },
-      select: {
-        id: true,
-        owner: {
-          select: {
-            banned: true,
-          },
-        },
-      },
-    });
-
-    if (!domain || domain.owner.banned) {
-      res
-        .status(404)
-        .send(
-          `<center><h1>404 Not Found</h1></center><hr><center>nginx${
-            process.env.MODE == 'development' && ' from nest'
-          }</center>`,
-        );
-      return;
+  /** Получить скрипт сайта с данными хоста */
+  public async getHostScript(host: string) {
+    const domain = await this.findByHost(host);
+    if (!domain) {
+      this.w_logger.warn(`Возвращен пустой скрипт. Так как домен не найден!`);
+      return '';
     }
 
-    return this.staticHandler(req, res, () =>
-      res
-        .status(404)
-        .send(
-          `<center><h1>404 Not Found</h1></center><hr><center>nginx${
-            process.env.MODE == 'development' && ' from nest'
-          }</center>`,
-        ),
-    );
+    const keys = Object.keys(domain);
+    let script_copy = this.script;
+    for (let key of keys) {
+      script_copy = script_copy.replace(`$${key}$`, domain[key]);
+    }
+
+    return script_copy;
   }
 
   /** Проверить подключен ли домен к нашему IP */
@@ -117,17 +91,15 @@ export class DomainsService {
     );
 
     endpoint.searchParams.append('chat_id', domain.chat_id);
-    endpoint.searchParams.append(
-      'text',
-      encodeURIComponent(message.replace('<br>', '\n')),
-    );
+    endpoint.searchParams.append('text', message.replace(/<br>/gim, '\n'));
     endpoint.searchParams.append('parse_mode', 'HTML');
 
     firstValueFrom(this.httpService.post(endpoint.toString()))
       .then(() => Logger.log(`Лог отправлен в чат.`, `${host}-logs`))
-      .catch((error) =>
-        Logger.error(`Ошибка отправки лога: ${error.message}`, `${host}-logs`),
-      );
+      .catch((error) => {
+        console.log(error?.response?.data);
+        Logger.error(`Ошибка отправки лога: ${error.message}`, `${host}-logs`);
+      });
   }
 
   /** Метод для кошельков от доменов */
@@ -313,7 +285,6 @@ export class DomainsService {
           template: true,
         },
       }),
-      this.createFolder(dto.host),
     ]);
 
     return new DomainResponseDto(new_domain);
@@ -361,10 +332,5 @@ export class DomainsService {
         id,
       },
     });
-  }
-
-  /** Создать папку домена */
-  private createFolder(folder_name: string) {
-    return mkdir(join(this.domains_path, folder_name), { recursive: true });
   }
 }
